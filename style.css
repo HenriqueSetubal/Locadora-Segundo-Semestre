@@ -23,8 +23,8 @@ body {
 .window-container {
     width: 900px;
     max-width: 100%;
-    margin: 0 auto; /* Centraliza horizontalmente, mas cola no topo */
-    padding-top: 18px;
+    margin: 0 auto;
+    padding: 18px 12px 24px;
     background-color: rgba(0, 12, 0, 0.78);
 }
 
@@ -35,7 +35,7 @@ header {
     -webkit-backdrop-filter: blur(10px);
     padding: 15px 30px;
     display: grid;
-    grid-template-columns: auto auto;
+    grid-template-columns: minmax(0, 1fr) auto;
     justify-content: space-between;
     gap: 18px;
     align-items: center;
@@ -52,6 +52,8 @@ header {
     font-size: 24px;
     font-weight: 400;
     letter-spacing: 1.5px;
+    line-height: 1.2;
+    margin: 0;
     text-shadow: 0 2px 6px rgba(0, 0, 0, 0.65);
 }
 
@@ -79,7 +81,6 @@ a.store-link {
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
 }
 
-/* Efeito ao passar o mouse sobre as abas */
 header .store-link:hover,
 a.store-link:hover {
     color: #ffffff;
@@ -89,13 +90,11 @@ a.store-link:hover {
         0 0 14px rgba(77, 255, 104, 0.65);
 }
 
-/* Efeito ao clicar */
 header .store-link:active,
 a.store-link:active {
     transform: translateY(1px);
 }
 
-/* Estilo para a aba selecionada */
 header .store-link.active,
 a.store-link.active {
     color: #ffffff;
@@ -154,22 +153,19 @@ a.store-link.active {
 .game-info p {
     font-size: 15px;
     line-height: 1.4;
+    margin-bottom: 0;
 }
 
 .game-image {
     width: 180px;
     height: 84px;
     flex-shrink: 0;
-    object-fit: contain;
+    object-fit: cover;
     border-radius: 6px;
 }
 
 .novo-jogo {
     margin-top: 16px;
-}
-
-.novo-jogo .game-image {
-    object-fit: cover;
 }
 
 /* Container dos botões do jogo */
@@ -189,6 +185,9 @@ a.store-link.active {
     border-radius: 999px;
     font-size: 15px;
     font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     border: 1px solid rgba(255, 255, 255, 0.45);
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.65), 0 2px 6px rgba(0, 0, 0, 0.22);
     transition: all 0.2s ease;
@@ -196,6 +195,7 @@ a.store-link.active {
 }
 
 .frutiger-btn:hover {
+    color: white;
     background: linear-gradient(180deg, #9ef7a8 0%, #35c452 45%, #087024 100%);
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85), 0 0 12px rgba(77, 255, 104, 0.55);
 }
@@ -219,34 +219,6 @@ a.store-link.active {
 .btn-remover:hover {
     background: linear-gradient(180deg, #ffa1a1 0%, #f44336 48%, #a91613 100%);
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 0 12px rgba(255, 82, 82, 0.55);
-}
-
-@media (max-width: 600px) {
-    .game-card {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) auto;
-        gap: 12px;
-    }
-
-    .game-image {
-        grid-column: 1 / -1;
-        width: 100%;
-        height: auto;
-        aspect-ratio: 460 / 215;
-    }
-
-    .game-info {
-        min-width: 0;
-    }
-
-    .game-actions {
-        justify-self: end;
-        flex-wrap: wrap;
-    }
-
-    .frutiger-btn {
-        justify-self: end;
-    }
 }
 
 /* Banner principal com Rodrick à direita */
@@ -285,7 +257,7 @@ a.store-link.active {
 .hero-copy h2 {
     font-family: 'Rubik Glitch', 'Impact', sans-serif;
     margin-bottom: 10px;
-    font-size: clamp(24px, 3.8vw, 36px);
+    font-size: clamp(22px, 3.8vw, 36px);
     font-weight: 400;
     letter-spacing: 1px;
     line-height: 1.15;
@@ -294,6 +266,7 @@ a.store-link.active {
 .hero-copy p {
     color: #e0ffe2;
     font-size: 15px;
+    margin-bottom: 0;
 }
 
 .rodrick-character {
@@ -308,32 +281,6 @@ a.store-link.active {
     filter: drop-shadow(0 0 18px rgba(0, 0, 0, .7));
 }
 
-@media (max-width: 600px) {
-    .hero-banner {
-        min-height: 230px;
-        padding: 24px 18px;
-    }
-
-    .hero-copy {
-        max-width: 62%;
-    }
-
-    .rodrick-character {
-        right: -4%;
-        height: 88%;
-    }
-
-    header {
-        grid-template-columns: minmax(0, 1fr) auto;
-        gap: 12px;
-    }
-
-    .store-link {
-        grid-column: 2;
-        grid-row: 1;
-    }
-}
-
 /* Modal de cadastro de jogo (#cadastroOverlay) */
 .cadastro-overlay,
 #cadastroOverlay {
@@ -345,7 +292,7 @@ a.store-link.active {
     display: none;
     align-items: center;
     justify-content: center;
-    padding: 18px;
+    padding: 16px;
     z-index: 9999;
 }
 
@@ -358,8 +305,8 @@ a.store-link.active {
     position: relative;
     width: min(100%, 480px);
     max-height: 90vh;
-    overflow: auto;
-    padding: 28px;
+    overflow-y: auto;
+    padding: 24px;
     border: 2px solid #42ff58;
     border-radius: 16px;
     background: #071407;
@@ -377,12 +324,13 @@ a.store-link.active {
 
 .cadastro-modal p {
     color: #c5d9c5;
-    margin-bottom: 20px;
+    margin-bottom: 16px;
+    font-size: 14px;
 }
 
 .cadastro-modal label {
     display: block;
-    margin: 13px 0 6px;
+    margin: 12px 0 6px;
     font-size: 14px;
     font-weight: 700;
     color: #efffee;
@@ -397,7 +345,7 @@ a.store-link.active {
     border-radius: 8px;
     background: #102510;
     color: #ffffff;
-    font-size: 14px;
+    font-size: 16px; /* Evita zoom automático no iOS */
     outline: none;
 }
 
@@ -415,12 +363,13 @@ a.store-link.active {
 .cadastro-fechar {
     position: absolute;
     top: 10px;
-    right: 15px;
+    right: 14px;
     border: 0;
     background: transparent;
     color: #ffffff;
     font-size: 30px;
     line-height: 1;
+    padding: 4px 8px;
     cursor: pointer;
 }
 
@@ -436,8 +385,9 @@ a.store-link.active {
 .cadastro-acoes button {
     border: 0;
     border-radius: 8px;
-    padding: 10px 16px;
+    padding: 11px 16px;
     font-weight: 700;
+    font-size: 15px;
     cursor: pointer;
 }
 
@@ -449,4 +399,135 @@ a.store-link.active {
 .cadastro-salvar {
     background: #48e653;
     color: #062006;
+}
+
+/* =========================================
+   RESPONSIVIDADE PARA CELULAR E TABLET
+   ========================================= */
+
+@media (max-width: 768px) {
+    body {
+        background-attachment: scroll; /* Melhora desempenho e evita zoom bugado no mobile */
+    }
+
+    .window-container {
+        padding: 10px 8px 20px;
+    }
+
+    header {
+        padding: 14px 16px;
+        gap: 10px;
+    }
+
+    .logo h1 {
+        font-size: 19px;
+        letter-spacing: 1px;
+    }
+
+    header .store-link,
+    a.store-link {
+        padding: 8px 16px;
+        font-size: 14px;
+    }
+
+    .hero-banner {
+        min-height: 210px;
+        padding: 20px 16px;
+    }
+
+    .hero-copy {
+        max-width: 64%;
+    }
+
+    .hero-copy h2 {
+        font-size: 21px;
+        margin-bottom: 6px;
+    }
+
+    .hero-copy p {
+        font-size: 13px;
+        line-height: 1.35;
+    }
+
+    .rodrick-character {
+        right: -6%;
+        height: 90%;
+        max-height: 215px;
+    }
+
+    .lista {
+        padding: 18px 14px;
+    }
+
+    .lista h1 {
+        font-size: 22px;
+        margin-bottom: 14px;
+    }
+
+    /* Card de jogo empilhado para toque fácil no celular */
+    .game-card {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 14px;
+        gap: 12px;
+    }
+
+    .game-image {
+        width: 100%;
+        height: auto;
+        aspect-ratio: 460 / 215;
+    }
+
+    .game-info h3 {
+        font-size: 18px;
+    }
+
+    .game-info p {
+        font-size: 14px;
+    }
+
+    .game-actions {
+        width: 100%;
+        flex-direction: column;
+    }
+
+    .game-card > .frutiger-btn,
+    .game-actions .frutiger-btn,
+    .game-actions .btn-remover {
+        width: 100%;
+        padding: 12px 16px;
+        font-size: 15px;
+        text-align: center;
+    }
+
+    /* Modal ajustado para polegar no mobile */
+    .cadastro-modal {
+        padding: 20px 16px;
+    }
+
+    .cadastro-acoes,
+    .modal-acoes {
+        flex-direction: column-reverse;
+    }
+
+    .cadastro-acoes button {
+        width: 100%;
+        padding: 12px;
+    }
+}
+
+/* Telas muito pequenas (ex: 360px) */
+@media (max-width: 380px) {
+    .logo h1 {
+        font-size: 17px;
+    }
+
+    .hero-copy {
+        max-width: 68%;
+    }
+
+    .rodrick-character {
+        right: -10%;
+        height: 82%;
+    }
 }
