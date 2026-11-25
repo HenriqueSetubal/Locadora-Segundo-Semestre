@@ -1,607 +1,337 @@
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: 'Quicksand', sans-serif;
-}
+/* SCRIPT DA LOCADORA SALVE GAMES (VERSÃO COM CADASTRO E REMOÇÃO)
+   Gerencia os jogos na tela, salva/remove dados no navegador (localStorage)
+   e controla o modal de cadastro de novos jogos.*/
+// Espera todo o HTML da página carregar antes de executar o código.
+// Assim garantimos que os elementos (botões, modal, formulário) já existem na tela.
+document.addEventListener("DOMContentLoaded", () => {
 
-/* Fundo da página */
-body {
-    min-height: 100vh;
-    background-color: #061006;
-    background-image:
-        linear-gradient(rgba(0, 18, 7, 0.55), rgba(0, 18, 7, 0.78)),
-        url("fotos do site/fundo-verde.jpeg");
-    background-size: cover;
-    background-position: center center;
-    background-repeat: no-repeat;
-    background-attachment: fixed;
-    color: #ffffff;
-}
+    // 1. ELEMENTOS PRINCIPAIS DA PÁGINA
+    // Container onde ficam os cards de jogos (nota: aqui o seletor busca main.lista)
+    const mainContainer = document.querySelector("main.lista");
 
-/* Container centralizado */
-.window-container {
-    width: 900px;
-    max-width: 100%;
-    margin: 0 auto;
-    padding: 18px 12px 24px;
-    background-color: rgba(0, 12, 0, 0.78);
-}
+    // Links de navegação no topo (ex: o botão "Loja")
+    const navLinks = document.querySelectorAll("header nav a, header > .store-link");
 
-/* Cabeçalho */
-header {
-    background: linear-gradient(180deg, rgba(24, 105, 43, .98), rgba(3, 48, 17, .98));
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    padding: 15px 30px;
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    justify-content: space-between;
-    gap: 18px;
-    align-items: center;
-    border: 1px solid rgba(91, 255, 115, .55);
-    border-bottom: none;
-    border-radius: 12px 12px 0 0;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-}
+    // Elementos do modal (janela pop-up) de cadastro de jogo
+    const overlay = document.getElementById("cadastroOverlay");
+    const formCadastro = document.getElementById("formCadastroJogo");
+    const btnFechar = document.getElementById("fecharCadastro");
+    const btnCancelar = document.getElementById("cancelarCadastro");
 
-/* Estilo do título (infected) */
-.logo h1 {
-    font-family: 'Rubik Glitch', 'Impact', sans-serif;
-    color: #ffffff;
-    font-size: 24px;
-    font-weight: 400;
-    letter-spacing: 1.5px;
-    line-height: 1.2;
-    margin: 0;
-    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.65);
-}
 
-/* Estilo Frutiger Aero do botão "Loja" */
-header .store-link,
-a.store-link {
-    color: #ffffff;
-    text-decoration: none;
-    font-size: 15px;
-    font-weight: 700;
-    padding: 10px 22px;
-    border-radius: 999px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    line-height: 1.2;
-    cursor: pointer;
-    white-space: nowrap;
-    transition: all 0.2s ease;
-    background: linear-gradient(180deg, #75e982 0%, #20a83d 45%, #07551c 100%);
-    border: 1px solid rgba(255, 255, 255, 0.45);
-    box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.65),
-        0 2px 6px rgba(0, 0, 0, 0.22);
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
-}
+    // 2. CHAVES DO LOCALSTORAGE
+    // O localStorage funciona como um "caderninho" dentro do próprio navegador:
+    // mesmo se você atualizar a página (F5) ou fechar a aba, os dados continuam lá.
+    const STORAGE_KEY = "salveGames_jogosCadastrados";
+    const REMOVED_STATIC_KEY = "salveGames_jogosFixosRemovidos";
 
-header .store-link:hover,
-a.store-link:hover {
-    color: #ffffff;
-    background: linear-gradient(180deg, #9ef7a8 0%, #35c452 45%, #087024 100%);
-    box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.85),
-        0 0 14px rgba(77, 255, 104, 0.65);
-}
 
-header .store-link:active,
-a.store-link:active {
-    transform: translateY(1px);
-}
-
-header .store-link.active,
-a.store-link.active {
-    color: #ffffff;
-    background: linear-gradient(180deg, #86f292 0%, #1ba137 45%, #054918 100%);
-    border-color: rgba(255, 255, 255, 0.85);
-    box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.85),
-        0 0 12px rgba(91, 255, 115, 0.45);
-}
-
-/* Área de Conteúdo (.lista) */
-.lista {
-    padding: 30px;
-    font-size: larger;
-    background: linear-gradient(180deg, rgba(224, 255, 226, .96), rgba(184, 239, 190, .94));
-    border: 1px solid rgba(91, 255, 115, .55);
-    border-radius: 0 0 12px 12px;
-    box-shadow: inset 0px -10px 30px 15px rgba(255, 255, 255, 0.6),
-                0 15px 35px rgba(0, 0, 0, 0.2);
-    color: #1a2a3a;
-}
-
-.lista h1 {
-    font-size: 28px;
-    margin-bottom: 20px;
-    color: #064d19;
-    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
-}
-
-/* Estilo do Card de Jogo dentro de .lista */
-.game-card {
-    background: linear-gradient(180deg, rgba(246, 255, 244, .96), rgba(210, 245, 211, .94));
-    border: 1px solid rgba(255, 255, 255, 0.9);
-    border-radius: 10px;
-    padding: 20px;
-    margin-top: 15px;
-    display: flex;
-    gap: 16px;
-    justify-content: space-between;
-    align-items: center;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 1),
-                0 4px 10px rgba(0, 0, 0, 0.1);
-}
-
-.game-info {
-    flex: 1;
-    min-width: 0;
-}
-
-.game-info h3 {
-    color: #07551c;
-    font-size: 20px;
-    margin-bottom: 5px;
-}
-
-.game-info p {
-    font-size: 15px;
-    line-height: 1.4;
-    margin-bottom: 0;
-}
-
-.game-image {
-    width: 180px;
-    height: 84px;
-    flex-shrink: 0;
-    object-fit: cover;
-    border-radius: 6px;
-}
-
-.novo-jogo {
-    margin-top: 16px;
-}
-
-/* Container dos botões do jogo */
-.game-actions {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-    flex-shrink: 0;
-}
-
-/* Botão Frutiger Aero */
-.frutiger-btn {
-    background: linear-gradient(180deg, #75e982 0%, #20a83d 45%, #07551c 100%);
-    color: white;
-    text-decoration: none;
-    padding: 10px 22px;
-    border-radius: 999px;
-    font-size: 15px;
-    font-weight: 600;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid rgba(255, 255, 255, 0.45);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.65), 0 2px 6px rgba(0, 0, 0, 0.22);
-    transition: all 0.2s ease;
-    white-space: nowrap;
-}
-
-.frutiger-btn:hover {
-    color: white;
-    background: linear-gradient(180deg, #9ef7a8 0%, #35c452 45%, #087024 100%);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85), 0 0 12px rgba(77, 255, 104, 0.55);
-}
-
-/* Botão Remover arredondado no estilo Frutiger Aero */
-.btn-remover {
-    background: linear-gradient(180deg, #ff7b7b 0%, #e53935 48%, #8e110e 100%);
-    color: #ffffff;
-    border: 1px solid rgba(255, 255, 255, 0.45);
-    padding: 10px 18px;
-    border-radius: 999px;
-    font-size: 14px;
-    font-weight: 700;
-    cursor: pointer;
-    line-height: 1.2;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 2px 6px rgba(0, 0, 0, 0.22);
-    transition: all 0.2s ease;
-    white-space: nowrap;
-}
-
-.btn-remover:hover {
-    background: linear-gradient(180deg, #ffa1a1 0%, #f44336 48%, #a91613 100%);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 0 12px rgba(255, 82, 82, 0.55);
-}
-
-/* Banner principal com Rodrick à direita */
-.hero-banner {
-    position: relative;
-    min-height: 290px;
-    display: flex;
-    align-items: center;
-    overflow: hidden;
-    padding: 34px 38px;
-    background:
-        linear-gradient(90deg, rgba(0, 25, 8, .92), rgba(0, 48, 13, .55) 58%, rgba(0, 25, 8, .08)),
-        url("fotos do site/fundo-verde.jpeg") center 42% / cover;
-    border: 1px solid rgba(92, 255, 115, .55);
-    border-bottom: 0;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, .35);
-}
-
-.hero-copy {
-    position: relative;
-    z-index: 2;
-    max-width: 55%;
-    color: #f1fff0;
-    text-shadow: 0 2px 8px #001b08;
-}
-
-.hero-tag {
-    display: inline-block;
-    margin-bottom: 12px;
-    color: #a5ffad;
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 2px;
-}
-
-.hero-copy h2 {
-    font-family: 'Rubik Glitch', 'Impact', sans-serif;
-    margin-bottom: 10px;
-    font-size: clamp(22px, 3.8vw, 36px);
-    font-weight: 400;
-    letter-spacing: 1px;
-    line-height: 1.15;
-}
-
-.hero-copy p {
-    color: #e0ffe2;
-    font-size: 15px;
-    margin-bottom: 0;
-}
-
-.rodrick-character {
-    position: absolute;
-    z-index: 1;
-    right: 4%;
-    bottom: -5px;
-    height: 112%;
-    max-height: 340px;
-    width: auto;
-    object-fit: contain;
-    filter: drop-shadow(0 0 18px rgba(0, 0, 0, .7));
-}
-
-/* Modal de cadastro de jogo (#cadastroOverlay) */
-.cadastro-overlay,
-#cadastroOverlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 18, 7, 0.78);
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
-    display: none;
-    align-items: center;
-    justify-content: center;
-    padding: 16px;
-    z-index: 9999;
-}
-
-.cadastro-overlay.aberto,
-#cadastroOverlay.aberto {
-    display: flex;
-}
-
-.cadastro-modal {
-    position: relative;
-    width: min(100%, 480px);
-    max-height: 90vh;
-    overflow-y: auto;
-    padding: 24px;
-    border-radius: 16px;
-    background: #071407;
-    color: #efffee;
-    font-family: 'Quicksand', sans-serif;
-    background-image:
-        linear-gradient(rgba(10, 15, 10, 0.85), rgba(61, 192, 61, 0.92)),
-        url('fotos do site/perfect_hue_31.jpg');
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    border: 1px solid #2ecc71;
-    box-shadow: 0 0 25px rgba(46, 204, 113, 0.4);
-}
-
-.cadastro-modal h2 {
-    color: #16ff16;
-    margin: 0 35px 8px 0;
-    font-size: 22px;
-    font-weight: 700;
-}
-
-.cadastro-modal p {
-    color: #16ff16;
-    margin-bottom: 16px;
-    font-size: 14px;
-}
-
-.cadastro-modal label {
-    display: block;
-    margin: 12px 0 6px;
-    font-size: 14px;
-    font-weight: 700;
-    color: #efffee;
-}
-
-.cadastro-modal input,
-.cadastro-modal textarea {
-    display: block;
-    width: 100%;
-    padding: 11px 12px;
-    border: 1px solid #438b4b;
-    border-radius: 8px;
-    background: #102510;
-    color: #ffffff;
-    font-size: 16px; /* Evita zoom automático no iOS */
-    outline: none;
-}
-
-.cadastro-modal input:focus,
-.cadastro-modal textarea:focus {
-    border-color: #70ff79;
-    box-shadow: 0 0 0 2px rgba(112, 255, 121, .15);
-}
-
-.cadastro-modal textarea {
-    min-height: 90px;
-    resize: vertical;
-}
-
-.cadastro-fechar {
-    position: absolute;
-    top: 10px;
-    right: 14px;
-    border: 0;
-    background: transparent;
-    color: #ffffff;
-    font-size: 30px;
-    line-height: 1;
-    padding: 4px 8px;
-    cursor: pointer;
-}
-
-.cadastro-acoes,
-.modal-acoes {
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-    margin-top: 22px;
-    flex-wrap: wrap;
-}
-
-/* Botão "Cancelar" no estilo Frutiger Aero */
-.cadastro-acoes .cadastro-cancelar,
-.modal-acoes .cadastro-cancelar,
-#btnCancelarCadastro,
-.cadastro-cancelar {
-    position: static;
-    width: auto;
-    max-width: none;
-    max-height: none;
-    overflow: visible;
-    margin: 0;
-    background: linear-gradient(180deg, #6e7d71 0%, #374439 48%, #182119 100%);
-    color: #ffffff;
-    border: 1px solid rgba(255, 255, 255, 0.35);
-    padding: 10px 22px;
-    border-radius: 999px;
-    font-family: 'Quicksand', sans-serif;
-    font-size: 14px;
-    font-weight: 700;
-    line-height: 1.2;
-    cursor: pointer;
-    white-space: nowrap;
-    box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.45),
-        0 2px 6px rgba(0, 0, 0, 0.25);
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
-    transition: all 0.2s ease;
-}
-
-.cadastro-acoes .cadastro-cancelar:hover,
-.modal-acoes .cadastro-cancelar:hover,
-#btnCancelarCadastro:hover,
-.cadastro-cancelar:hover {
-    background: linear-gradient(180deg, #87998a 0%, #48594b 48%, #222e24 100%);
-    box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.65),
-        0 0 12px rgba(140, 175, 145, 0.4);
-}
-
-.cadastro-acoes .cadastro-cancelar:active,
-.modal-acoes .cadastro-cancelar:active,
-#btnCancelarCadastro:active,
-.cadastro-cancelar:active {
-    transform: translateY(1px);
-}
-
-/* Botão "Cadastrar jogo" no estilo Frutiger Aero */
-.cadastro-acoes .cadastro-salvar,
-.modal-acoes .cadastro-salvar,
-#btnSalvarJogo,
-.cadastro-salvar {
-    background: linear-gradient(180deg, #75e982 0%, #20a83d 45%, #07551c 100%);
-    color: #ffffff;
-    border: 1px solid rgba(255, 255, 255, 0.45);
-    padding: 10px 22px;
-    border-radius: 999px;
-    font-family: 'Quicksand', sans-serif;
-    font-size: 15px;
-    font-weight: 700;
-    line-height: 1.2;
-    cursor: pointer;
-    white-space: nowrap;
-    box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.65),
-        0 2px 6px rgba(0, 0, 0, 0.22);
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
-    transition: all 0.2s ease;
-}
-
-.cadastro-acoes .cadastro-salvar:hover,
-.modal-acoes .cadastro-salvar:hover,
-#btnSalvarJogo:hover,
-.cadastro-salvar:hover {
-    color: #ffffff;
-    background: linear-gradient(180deg, #9ef7a8 0%, #35c452 45%, #087024 100%);
-    box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.85),
-        0 0 14px rgba(77, 255, 104, 0.65);
-}
-
-.cadastro-acoes .cadastro-salvar:active,
-.modal-acoes .cadastro-salvar:active,
-#btnSalvarJogo:active,
-.cadastro-salvar:active {
-    transform: translateY(1px);
-}
-
-/* =========================================
-   RESPONSIVIDADE PARA CELULAR E TABLET
-   ========================================= */
-
-@media (max-width: 768px) {
-    body {
-        background-attachment: scroll; /* Melhora desempenho e evita zoom bugado no mobile */
+    // 3. FUNÇÕES AUXILIARES DO LOCALSTORAGE
+    // O localStorage só guarda texto (string), então usamos JSON.stringify para salvar
+    // listas/objetos e JSON.parse para transformar de volta em array/objeto.
+    // O try/catch evita que o site quebre se o armazenamento estiver bloqueado ou corrompido.
+    function obterJogosSalvos() {
+        try {
+            return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+        } catch {
+            return [];
+        }
     }
 
-    .window-container {
-        padding: 10px 8px 20px;
+    function salvarJogos(listaJogos) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(listaJogos));
     }
 
-    header {
-        padding: 14px 16px;
-        gap: 10px;
+    function obterJogosFixosRemovidos() {
+        try {
+            return JSON.parse(localStorage.getItem(REMOVED_STATIC_KEY)) || [];
+        } catch {
+            return [];
+        }
     }
 
-    .logo h1 {
-        font-size: 19px;
-        letter-spacing: 1px;
+    // Guarda o ID de um jogo fixo do HTML para que ele continue escondido após recarregar
+    function salvarJogoFixoRemovido(staticId) {
+        const removidos = obterJogosFixosRemovidos();
+        if (!removidos.includes(staticId)) {
+            removidos.push(staticId);
+            localStorage.setItem(REMOVED_STATIC_KEY, JSON.stringify(removidos));
+        }
     }
 
-    header .store-link,
-    a.store-link {
-        padding: 8px 16px;
-        font-size: 14px;
+    // Padroniza o preço para duas casas decimais (ex: "15,5" -> "15.50")
+    function formatarPreco(preco) {
+        if (preco === undefined || preco === null || preco === "") return "";
+        const numero = Number(String(preco).replace(",", "."));
+        if (Number.isNaN(numero)) {
+            return String(preco).trim();
+        }
+        return numero.toFixed(2);
     }
 
-    .hero-banner {
-        min-height: 210px;
-        padding: 20px 16px;
+
+    // 4. CRIAÇÃO DO BOTÃO "REMOVER" E REMOÇÃO DE CARDS
+    // Cria o botão vermelho dinamicamente via JS e já liga a função de clique nele
+    function criarBotaoRemover(nome, onClickHandler) {
+        const btnRemover = document.createElement("button");
+        btnRemover.type = "button";
+        btnRemover.className = "btn-remover";
+        btnRemover.textContent = "Remover";
+        btnRemover.title = `Remover ${nome}`;
+        btnRemover.style.cssText =
+            "background: #e53935; color: #fff; border: none; padding: 8px 16px; border-radius: 999px; cursor: pointer; font-weight: bold; line-height: 1.2;";
+
+        btnRemover.addEventListener("click", onClickHandler);
+        return btnRemover;
     }
 
-    .hero-copy {
-        max-width: 64%;
+    // Remove um jogo que foi cadastrado pelo usuário (apaga do localStorage e do HTML)
+    function removerJogoCadastrado(id, nome, cardElement) {
+        const confirmou = confirm(`Tem certeza que deseja remover "${nome}"?`);
+        if (!confirmou) return;
+
+        const jogosSalvos = obterJogosSalvos();
+        // .filter() cria uma nova lista mantendo todos os jogos EXCETO o que tem esse id
+        const jogosAtualizados = jogosSalvos.filter((jogo) => jogo.id !== id);
+        salvarJogos(jogosAtualizados);
+
+        // Remove o elemento visual da tela
+        cardElement.remove();
     }
 
-    .hero-copy h2 {
-        font-size: 21px;
-        margin-bottom: 6px;
+    // Remove um jogo que já estava escrito direto no HTML (e lembra disso no localStorage)
+    function removerJogoFixo(staticId, nome, cardElement) {
+        const confirmou = confirm(`Tem certeza que deseja remover "${nome}"?`);
+        if (!confirmou) return;
+
+        salvarJogoFixoRemovido(staticId);
+        cardElement.remove();
     }
 
-    .hero-copy p {
-        font-size: 13px;
-        line-height: 1.35;
+
+    // 5. PREPARAÇÃO DOS CARDS FIXOS DO HTML
+    function configurarCardsExistentes() {
+        // Pega apenas os cards que já existiam no HTML (ignorando os criados via JS com .novo-jogo)
+        const cardsExistentes = mainContainer?.querySelectorAll(".game-card:not(.novo-jogo)") || [];
+        const removidos = obterJogosFixosRemovidos();
+
+        cardsExistentes.forEach((card, index) => {
+            const nome = card.querySelector(".game-info h3")?.textContent?.trim() || "este jogo";
+            const staticId = card.dataset.staticId || `fixo-${index}-${nome}`;
+            card.dataset.staticId = staticId;
+
+            // Se o usuário já tinha removido esse jogo fixo antes, tira ele da tela logo na carga
+            if (removidos.includes(staticId)) {
+                card.remove();
+                return;
+            }
+
+            // Evita duplicar o botão Remover se a função rodar mais de uma vez
+            if (card.querySelector(".btn-remover")) return;
+
+            const btnRemover = criarBotaoRemover(nome, () => {
+                removerJogoFixo(staticId, nome, card);
+            });
+
+            // Agrupa "Alugar" e "Remover" lado a lado dentro de uma div .game-actions
+            const btnAlugar = card.querySelector(".frutiger-btn");
+            if (btnAlugar) {
+                const acoes = document.createElement("div");
+                acoes.className = "game-actions";
+                acoes.style.cssText = "display: flex; gap: 8px; align-items: center; flex-wrap: wrap;";
+                btnAlugar.parentNode.insertBefore(acoes, btnAlugar);
+                acoes.append(btnAlugar, btnRemover);
+            } else {
+                card.appendChild(btnRemover);
+            }
+        });
     }
 
-    .rodrick-character {
-        right: -6%;
-        height: 90%;
-        max-height: 215px;
+
+    // 6. RENDERIZAÇÃO (DESENHO NA TELA) DE UM JOGO CADASTRADO
+    // Monta toda a estrutura HTML do card via JS para evitar colocar texto direto como HTML bruto
+    function renderizarJogo({ id, nome, descricao, preco, imagemUrl }) {
+        const card = document.createElement("div");
+        card.className = "game-card novo-jogo";
+        if (id) card.dataset.id = id;
+
+        // Se houver URL de imagem, cria a <img>; se estiver vazio, mostra "(foto não enviada)"
+        let midiaCard;
+        if (imagemUrl && imagemUrl.trim() !== "") {
+            const img = document.createElement("img");
+            img.src = imagemUrl.trim();
+            img.alt = `Capa do ${nome}`;
+            img.className = "game-image";
+            img.loading = "lazy";
+            midiaCard = img;
+        } else {
+            const semFoto = document.createElement("div");
+            semFoto.className = "game-image sem-foto";
+            semFoto.textContent = "(foto não enviada)";
+            semFoto.setAttribute("aria-label", "Foto não enviada");
+            midiaCard = semFoto;
+        }
+
+        const info = document.createElement("div");
+        info.className = "game-info";
+
+        const titulo = document.createElement("h3");
+        titulo.textContent = nome;
+
+        const desc = document.createElement("p");
+        desc.textContent = descricao;
+
+        const precoFormatado = formatarPreco(preco);
+        if (precoFormatado) {
+            desc.append(document.createElement("br"), document.createElement("br"), `Preço: R$:${precoFormatado}`);
+        }
+
+        info.append(titulo, desc);
+
+        const acoes = document.createElement("div");
+        acoes.className = "game-actions";
+        acoes.style.cssText = "display: flex; gap: 8px; align-items: center; flex-wrap: wrap;";
+
+        const btnAlugar = document.createElement("a");
+        btnAlugar.href = "#";
+        btnAlugar.className = "frutiger-btn";
+        btnAlugar.textContent = "Alugar";
+
+        const btnRemover = criarBotaoRemover(nome, () => {
+            removerJogoCadastrado(id, nome, card);
+        });
+
+        acoes.append(btnAlugar, btnRemover);
+        card.append(midiaCard, info, acoes);
+
+        // Coloca o novo jogo logo abaixo do título <h1> "Jogos Disponíveis"
+        const h1 = mainContainer?.querySelector("h1");
+        if (h1 && h1.nextSibling) {
+            h1.parentNode.insertBefore(card, h1.nextSibling);
+        } else {
+            mainContainer?.appendChild(card);
+        }
     }
 
-    .lista {
-        padding: 18px 14px;
+
+    // 7. CARGA INICIAL DA PÁGINA
+    configurarCardsExistentes();
+
+    let jogosIniciais = obterJogosSalvos();
+    let precisouAtualizarIds = false;
+
+    // Garante que todo jogo salvo tenha um ID único (usado na hora de remover)
+    jogosIniciais = jogosIniciais.map((jogo, index) => {
+        if (!jogo.id) {
+            precisouAtualizarIds = true;
+            return { ...jogo, id: Date.now() + index };
+        }
+        return jogo;
+    });
+
+    if (precisouAtualizarIds) {
+        salvarJogos(jogosIniciais);
     }
 
-    .lista h1 {
-        font-size: 22px;
-        margin-bottom: 14px;
+    // Desenha na tela todos os jogos que estavam salvos no localStorage
+    jogosIniciais.forEach((jogo) => renderizarJogo(jogo));
+
+
+    // 8. CLIQUE EM "ALUGAR" (DELEGAÇÃO DE EVENTO)
+    // Em vez de colocar evento em cada botão novo e antigo separado, ouvimos o clique
+    // no container pai e verificamos com .closest(".frutiger-btn") se o alvo foi um botão Alugar.
+    mainContainer?.addEventListener("click", (event) => {
+        const button = event.target.closest(".frutiger-btn");
+        if (!button) return;
+
+        event.preventDefault();
+        const gameName = button.closest(".game-card")
+            ?.querySelector(".game-info h3")?.textContent?.trim();
+
+        if (gameName) {
+            alert(`Você selecionou "${gameName}" para alugar, aproveite a jogatina!`);
+        }
+    });
+
+
+    // 9. CONTROLE DO MODAL DE CADASTRO (ABRIR E FECHAR)
+    function abrirModal() {
+        if (!overlay) return;
+        overlay.classList.add("aberto");
+        overlay.setAttribute("aria-hidden", "false");
+        document.getElementById("nomeJogo")?.focus();
     }
 
-    /* Card de jogo empilhado para toque fácil no celular */
-    .game-card {
-        flex-direction: column;
-        align-items: stretch;
-        padding: 14px;
-        gap: 12px;
+    function fecharModal() {
+        if (!overlay) return;
+        overlay.classList.remove("aberto");
+        overlay.setAttribute("aria-hidden", "true");
+        formCadastro?.reset();
     }
 
-    .game-image {
-        width: 100%;
-        height: auto;
-        aspect-ratio: 460 / 215;
-    }
+    // Clicar em "Loja" abre o modal de cadastro; outros links avisam que não existem ainda
+    navLinks.forEach((link) => {
+        link.addEventListener("click", (event) => {
+            event.preventDefault();
+            navLinks.forEach((item) => item.classList.remove("active"));
+            link.classList.add("active");
 
-    .game-info h3 {
-        font-size: 18px;
-    }
+            const sectionName = link.textContent.trim();
+            if (sectionName === "Loja") {
+                abrirModal();
+            } else {
+                alert(`A seção "${sectionName}" ainda não foi implementada.`);
+            }
+        });
+    });
 
-    .game-info p {
-        font-size: 14px;
-    }
+    // Fecha o modal pelo "X", pelo botão "Cancelar", clicando fora da caixa ou apertando ESC
+    btnFechar?.addEventListener("click", fecharModal);
+    btnCancelar?.addEventListener("click", fecharModal);
 
-    .game-actions {
-        width: 100%;
-        flex-direction: column;
-    }
+    overlay?.addEventListener("click", (event) => {
+        if (event.target === overlay) {
+            fecharModal();
+        }
+    });
 
-    .game-card > .frutiger-btn,
-    .game-actions .frutiger-btn,
-    .game-actions .btn-remover {
-        width: 100%;
-        padding: 12px 16px;
-        font-size: 15px;
-        text-align: center;
-    }
+    document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && overlay?.classList.contains("aberto")) {
+            fecharModal();
+        }
+    });
 
-    /* Modal ajustado para polegar no mobile */
-    .cadastro-modal {
-        padding: 20px 16px;
-    }
 
-    .cadastro-acoes,
-    .modal-acoes {
-        flex-direction: column-reverse;
-    }
+    // 10. ENVIO DO FORMULÁRIO PARA CADASTRAR NOVO JOGO
+    formCadastro?.addEventListener("submit", (event) => {
+        // Impede o formulário de recarregar a página ao enviar
+        event.preventDefault();
 
-    .cadastro-acoes button {
-        width: 100%;
-        padding: 12px;
-    }
-}
+        const nome = document.getElementById("nomeJogo").value.trim();
+        const descricao = document.getElementById("descricaoJogo").value.trim();
+        const preco = document.getElementById("precoJogo")?.value.trim() || "";
+        const imagemInformada = document.getElementById("imagemJogo").value.trim();
 
-/* Telas muito pequenas (ex: 360px) */
-@media (max-width: 380px) {
-    .logo h1 {
-        font-size: 17px;
-    }
+        if (!nome || !descricao) return;
 
-    .hero-copy {
-        max-width: 68%;
-    }
+        // Se o usuário não colar URL de imagem, deixa vazio para exibir "(foto não enviada)"
+        const imagemUrl = imagemInformada || "";
 
-    .rodrick-character {
-        right: -10%;
-        height: 82%;
-    }
-}
+        const novoJogo = {
+            id: Date.now(),
+            nome,
+            descricao,
+            preco,
+            imagemUrl
+        };
+
+        // Salva no localStorage e já mostra o card na tela
+        const jogosSalvos = obterJogosSalvos();
+        jogosSalvos.push(novoJogo);
+        salvarJogos(jogosSalvos);
+
+        renderizarJogo(novoJogo);
+
+        fecharModal();
+    });
+});
